@@ -13,40 +13,41 @@ graph TD
     Admin[👤 System Administrator]:::user
     
     subgraph LocalHost ["🏡 Local Hardened Host Environment"]
-        %% Main execution blocks grouped together down the center
+        %% Main Engine Chain
         Wrapper["🛠️ /usr/local/bin/cx<br>(Hardened Wrapper Script)"]:::local
         Daemon["⚙️ Local Gateway Daemon<br>(127.0.0.1:18080)"]:::daemon
         Check1["🔒 4a. Enforces 'tier0-readonly' check"]:::subEngine
         Check2["🧹 4b. Runs localized Regex filters"]:::subEngine
         
-        %% Side logging containers to break rendering dependency
+        %% Log files stacked perfectly on the right
         UserLog[("📝 user-map.log<br>(UID, TTY, Hash)")]:::log
         PromptLog[("📝 prompts.log<br>(Sanitized Telemetry)")]:::log
     end
 
-    subgraph RedHat ["☁️ Red Hat Infrastructure"]
-        RHCloud["Red Hat Hybrid Cloud Console<br>API Engine"]:::cloud
-    end
-
+    %% Outbound Infrastructure
+    RHCloud["☁️ Red Hat Hybrid Cloud Console<br>API Engine"]:::cloud
     Response["💻 System Terminal Response<br>(Verified Linux KB)"]:::terminal
 
-    %% Pipeline Processing
+    %% Top Stream
     Admin -->|1. Executes cx 'how do I find...'| Wrapper
     Wrapper -->|3. Redirects to /usr/bin/c| Daemon
+    
+    %% First Log Phase
+    Wrapper -->|2a| UserLog
+    Wrapper -->|2b| UserLog
+    
+    %% Internal Execution Chain
     Daemon --> Check1
     Check1 --> Check2
     
-    %% Logs split onto separate sides to prevent overlapping connections
-    Wrapper --->|2a. Generates prompt_hash| UserLog
-    Wrapper --->|2b. Logs user context| UserLog
-    Check2 --->|5. Commits sanitized telemetry| PromptLog
-    
-    %% Outbound delivery path
+    %% Split Final Outputs cleanly to Left and Right sides
+    Check2 -->|5. Commits sanitized telemetry| PromptLog
     Check2 -->|6. Forwards clean prompt via Satellite| RHCloud
+    
+    %% Final Destination Output
     RHCloud -->|7. Resolves query against KB| Response
 
-    %% Explicit rendering constraints to align nodes left-to-right perfectly
-    UserLog ~~~ Daemon
-    Check1 ~~~ PromptLog
-    PromptLog ~~~ RHCloud
+    %% Alignment forces to clear crossing lines completely
+    RHCloud ~~~ PromptLog
+    UserLog  ~~~ Daemon
 ```
