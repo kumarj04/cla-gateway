@@ -13,41 +13,37 @@ graph TD
     Admin[👤 System Administrator]:::user
     
     subgraph LocalHost ["🏡 Local Hardened Host Environment"]
-        %% Main Engine Chain
+        %% Primary Central Processing Spine
         Wrapper["🛠️ /usr/local/bin/cx<br>(Hardened Wrapper Script)"]:::local
         Daemon["⚙️ Local Gateway Daemon<br>(127.0.0.1:18080)"]:::daemon
         Check1["🔒 4a. Enforces 'tier0-readonly' check"]:::subEngine
         Check2["🧹 4b. Runs localized Regex filters"]:::subEngine
         
-        %% Log files stacked perfectly on the right
+        %% Log files aligned cleanly on the left side
         UserLog[("📝 user-map.log<br>(UID, TTY, Hash)")]:::log
         PromptLog[("📝 prompts.log<br>(Sanitized Telemetry)")]:::log
     end
 
-    %% Outbound Infrastructure
+    %% Outbound Infrastructure (Right side delivery)
     RHCloud["☁️ Red Hat Hybrid Cloud Console<br>API Engine"]:::cloud
     Response["💻 System Terminal Response<br>(Verified Linux KB)"]:::terminal
 
-    %% Top Stream
+    %% Straight Central Execution Flow
     Admin -->|1. Executes cx 'how do I find...'| Wrapper
     Wrapper -->|3. Redirects to /usr/bin/c| Daemon
-    
-    %% First Log Phase
-    Wrapper -->|2a| UserLog
-    Wrapper -->|2b| UserLog
-    
-    %% Internal Execution Chain
     Daemon --> Check1
     Check1 --> Check2
     
-    %% Split Final Outputs cleanly to Left and Right sides
+    %% Left-Side Logging Streams
+    Wrapper -->|2a| UserLog
+    Wrapper -->|2b| UserLog
     Check2 -->|5. Commits sanitized telemetry| PromptLog
-    Check2 -->|6. Forwards clean prompt via Satellite| RHCloud
     
-    %% Final Destination Output
+    %% Right-Side Network Delivery
+    Check2 -->|6. Forwards clean prompt via Satellite| RHCloud
     RHCloud -->|7. Resolves query against KB| Response
 
-    %% Alignment forces to clear crossing lines completely
-    RHCloud ~~~ PromptLog
-    UserLog  ~~~ Daemon
+    %% Hard Alignment Overrides (Keeps line 3 perfectly straight)
+    UserLog ~~~ Daemon
+    PromptLog ~~~ Check2
 ```
