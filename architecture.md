@@ -1,35 +1,41 @@
-```mermaid
 sequenceDiagram
+    autonumber
     actor Admin as 👤 System Administrator
-    box rgb(254, 251, 216) Local Hardened Host Environment
-        participant Wrapper as 🛠️ /usr/local/bin/cx<br>(Wrapper Script)
-        participant Log1 as 📝 user-map.log<br>(Context Map)
-        participant Daemon as ⚙️ Local Gateway Daemon<br>(127.0.0.1:18080)
-        participant Log2 as 📝 prompts.log<br>(Telemetry Log)
+    
+    box rgb(240, 235, 255) "🚀 Central Unix Jump Server [admin]"
+        participant cx as 🛠️ cx Script Wrapper
+        participant Log1 as 📝 user-map.log (Audit)
     end
-    participant Cloud as ☁️ Red Hat Hybrid Cloud<br>Console API Engine
-    participant Terminal as 💻 System Terminal Response
 
-    Admin->>Wrapper: 1. Executes command (IPC / Execve)
-    activate Wrapper
-    Wrapper->>Log1: 2. Generates prompt_hash & logs context (File I/O)
-    Wrapper->>Daemon: 3. Redirects sanitized prompt (Loopback TCP/18080)
-    deactivate Wrapper
-    
-    activate Daemon
-    Note over Daemon: 4a. Enforces 'tier0-readonly' check<br>(Validates against command blacklist)
-    
-    alt Command Contains Destructive Root Activity
-        Daemon-->>Terminal: [FAIL] 4c. Rejects execution & returns Policy Block Alert
-    else Command Passes Security Validation
-        Note over Daemon: 4b. Runs localized Regex filters<br>(Scrubs System Names, IPs, and Keys)
-        Daemon->>Log2: 5. Commits sanitized telemetry (Local Disk Write)
-        Daemon->>Cloud: 6. Forwards clean telemetry prompt (HTTPS / TLS 1.3 via Satellite)
-        deactivate Daemon
-        
-        activate Cloud
-        Note over Cloud: Processes query against verified Linux KBs
-        Cloud->>Terminal: 7. Returns structural terminal response (HTTPS / JSON payload)
-        deactivate Cloud
+    box rgb(255, 245, 245) "🖥️ Production Node [client]"
+        participant Target as 🗄️ System Logs
     end
-```
+    
+    box rgb(240, 235, 255) "⚙️ Dedicated Checkpoint [gateway]"
+        participant GW as 🛡️ Gateway Daemon
+        participant Log2 as 📝 prompts.log
+    end
+    
+    participant Cloud as ☁️ Red Hat Cloud
+    participant Term as 💻 Terminal
+
+    Admin->>cx: Execute remote troubleshooting string
+    activate cx
+    cx->>Target: Pull text stream via SSH ('tail -20 /var/log/messages')
+    Target-->>cx: Return raw log payload ('kernel: e1000e: link tx/rx flap down')
+    cx->>Log1: Commit local session attribution details & unique 'prompt_hash'
+    cx->>GW: Forward raw stream to centralized daemon (TCP Port 18080)
+    deactivate cx
+    
+    activate GW
+    Note over GW: ⚠️ Enforce 'tier0-readonly' check<br>(Validate non-destructive instruction)
+    Note over GW: 🔍 Step 5b: Run Regex Sanitization Filters<br>(Permanently scrub host MAC / IP footprints)
+    GW->>Log2: Commit clean telemetry metrics
+    GW->>Cloud: Send anonymized error symptom via Satellite Proxy (mTLS 1.3)
+    deactivate GW
+    
+    activate Cloud
+    Note over Cloud: Match symptom against<br>verified Linux product KBs
+    Cloud->>Term: Stream remediation blueprint data stream
+    deactivate Cloud
+    Note over Term: Output: "Update e1000e driver payload<br>or disable ASPM states"
