@@ -1,3 +1,4 @@
+```mermaid
 sequenceDiagram
     autonumber
     actor Admin as 👤 System Administrator
@@ -39,3 +40,4 @@ sequenceDiagram
     Cloud->>Term: Stream remediation blueprint data stream
     deactivate Cloud
     Note over Term: Output: "Update e1000e driver payload<br>or disable ASPM states"
+```
