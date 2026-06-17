@@ -2,13 +2,13 @@
 sequenceDiagram
     actor AdminUser as 👤 System Administrator
     
-    box "🛡️ Target Node"
-        participant client as 🖥️ Host client (Production Server)
-    end
-    
     box "🚀 Central Unix Jump Server"
         participant admin as 🛠️ Jump Server admin (Runs cx)
         participant Log1 as 📝 user-map.log (Audit)
+    end
+
+    box "🛡️ Target Node"
+        participant client as 🖥️ Host client (Production Server)
     end
     
     box "⚙️ Dedicated Gateway Host"
@@ -19,11 +19,13 @@ sequenceDiagram
     participant Cloud as ☁️ Red Hat Cloud Engine
     participant Term as 💻 System Terminal
 
+    %% Step 1 lands directly on admin, because that's where the user is logged in
     AdminUser->>admin: 1. Logged into admin, executes:<br>ssh -q client "tail -20 /var/log/messages" | cx
     activate admin
     
-    admin->>client: 2. Requests log snippet (Executes tail)
-    client-->>admin: Streams log lines back to stdin
+    %% admin then triggers the remote execution over to the client
+    admin->>client: 2. Remotely executes tail command via SSH
+    client-->>admin: Streams log lines back to admin's stdin pipe
     
     admin->>Log1: 3. Logs admin context & prompt_hash
     admin->>gateway: 4. Redirects data to native binary /usr/bin/c (TCP/18080)
