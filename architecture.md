@@ -1,4 +1,3 @@
-```mermaid
 sequenceDiagram
     autonumber
     actor Admin as 👤 System Administrator
@@ -17,7 +16,11 @@ sequenceDiagram
         participant Log2 as 📝 prompts.log
     end
     
-    participant Cloud as ☁️ Red Hat Cloud
+    box rgb(245, 245, 245) "☁️ Red Hat Enterprise Cloud Boundary"
+        participant Cloud as 🎛️ Hybrid Cloud Console API
+        participant LLM as 🤖 IBM Granite LLM Engine
+    end
+    
     participant Term as 💻 Terminal
 
     Admin->>cx: Execute remote troubleshooting string
@@ -36,8 +39,12 @@ sequenceDiagram
     deactivate GW
     
     activate Cloud
-    Note over Cloud: Match symptom against<br>verified Linux product KBs
-    Cloud->>Term: Stream remediation blueprint data stream
+    Note over Cloud: Validates subscription token &<br>proxies sanitized string downstream
+    Cloud->>LLM: Pass anonymized query context window
     deactivate Cloud
+    
+    activate LLM
+    Note over LLM: 🧠 Stateless RAG Processing:<br>Evaluates query against verified product KBs.<br>Zero retention / No model training allowed.
+    LLM->>Term: Stream remediation blueprint data stream
+    deactivate LLM
     Note over Term: Output: "Update e1000e driver payload<br>or disable ASPM states"
-```
