@@ -27,13 +27,11 @@ graph TD
         PromptLog[("📝 5. prompts.log<br>(Commits Sanitized Telemetry)")]:::log
     end
 
-    subgraph RedHat ["☁️ Red Hat Infrastructure"]
-        RHCloud["Red Hat Hybrid Cloud Console<br>API Engine"]:::cloud
-    end
-
+    %% External Infrastructure (Unnested to allow crisp horizontal spacing)
+    RHCloud["☁️ Red Hat Hybrid Cloud Console<br>API Engine"]:::cloud
     Response["💻 7. System Terminal Response<br>(Verified Linux KB Result)"]:::terminal
 
-    %% Top Spine Flow
+    %% Main Central Spine Flow
     Admin -->|IPC / Execve| Wrapper
     Wrapper --> UserLog
     Wrapper --> Daemon
@@ -43,15 +41,16 @@ graph TD
     Check1 -->|Destructive Blocked| FailBlock
     Check1 -->|Safe to Process| Check2
     
-    %% Left Side Failure Stream 
+    %% Left Side Drop For Blocked Execution
     FailBlock -->|Immediate Drop| Response
     
-    %% Clean Symmetrical Outbound Paths (Completely eliminates intersection)
+    %% Right Side Outputs (Split Left and Right beneath 4b)
     Check2 -->|5. Local Log Write| PromptLog
     Check2 -->|6. HTTPS / TLS 1.3 via Satellite| RHCloud
     
+    %% Final Resolution Path
     RHCloud -->|HTTPS / JSON Payload| Response
 
-    %% Hard alignment layout constraint (Keeps boxes spaced cleanly)
-    PromptLog ~~~ RHCloud
+    %% Hard Constraint Rule: Pushes Cloud engine to the right of the log file
+    PromptLog -.- RHCloud
 ```
