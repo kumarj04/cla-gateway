@@ -20,7 +20,7 @@ graph TD
         Daemon["⚙️ 3. Local Gateway Daemon<br>(Loopback TCP/18080)"]:::daemon
         Check1["🔒 4a. Enforces 'tier0-readonly' check"]:::subEngine
         
-        %% Conditional Logic Split
+        %% Core Security Decision Layer
         Check2["🧹 4b. Passes Check: Runs Localized Regex Filters"]:::subEngine
         FailBlock["🚨 4c. Destructive Activity Detected:<br>Policy Block Alert Issued"]:::alert
         
@@ -33,23 +33,24 @@ graph TD
 
     Response["💻 7. System Terminal Response<br>(Verified Linux KB Result)"]:::terminal
 
-    %% Pipeline Structure Flows
+    %% Top Stream
     Admin -->|IPC / Execve| Wrapper
     Wrapper --> UserLog
     Wrapper --> Daemon
-    
     Daemon --> Check1
     
     %% Split Branches
     Check1 -->|Destructive Blocked| FailBlock
     Check1 -->|Safe to Process| Check2
     
-    %% Terminal Output from Failure
+    %% Left Side Drop For Blocked Execution
     FailBlock -->|Immediate Drop| Response
     
-    %% Success Data Stream Continue
+    %% Right Side Stream For Sanitized Queries (No crossing lines)
     Check2 --> PromptLog
     Check2 -->|6. HTTPS / TLS 1.3 via Satellite| RHCloud
-    
     RHCloud -->|HTTPS / JSON Payload| Response
+
+    %% Alignment Constraints to Keep Lines Straight
+    Check2 -.- RHCloud
 ```
