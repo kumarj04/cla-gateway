@@ -1,3 +1,4 @@
+```mermaid
 sequenceDiagram
     actor Admin as 👤 Admin
     box rgb(240, 248, 255) Remote Target Production Nodes
@@ -41,3 +42,4 @@ sequenceDiagram
         Cloud->>Term: 8. Returns response payload
         deactivate Cloud
     end
+```
