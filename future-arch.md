@@ -1,48 +1,46 @@
 ```mermaid
 sequenceDiagram
-    actor Admin as 👤 Admin
+    actor AdminUser as 👤 System Administrator
     
-    box "Remote Target Production Nodes"
-        participant NodeLog as 📝 Production Target Logs<br>(Syslog, App, or Audit)
+    box "🛡️ Target Node"
+        participant client as 🖥️ Host client (Production Server)
     end
     
-    box "Central Unix Jump Server (Runs ClaD Engine)"
-        participant Wrapper as 🛠️ cx Wrapper Script
-        participant Log1 as 📝 user-map.log<br>(Central Audit Trail)
+    box "🚀 Central Unix Jump Server"
+        participant admin as 🛠️ Jump Server admin (Runs cx)
+        participant Log1 as 📝 user-map.log (Audit)
     end
     
-    box "Dedicated Unix ClaD Gateway Host"
-        participant Daemon as ⚙️ Gateway Daemon
-        participant Log2 as 📝 prompts.log<br>(Telemetry Log)
+    box "⚙️ Dedicated Gateway Host"
+        participant gateway as 🛡️ Gateway Server gateway (Runs c)
+        participant Log2 as 📝 prompts.log (Clean Logs)
     end
     
     participant Cloud as ☁️ Red Hat Cloud Engine
-    participant Term as 💻 Terminal
+    participant Term as 💻 System Terminal
 
-    Admin->>Wrapper: 1. Executes log analysis query
-    activate Wrapper
+    AdminUser->>admin: 1. Logged into admin, executes:<br>ssh -q client "tail -20 /var/log/messages" | cx
+    activate admin
     
-    %% Remote Pull Steps
-    Wrapper->>NodeLog: 2. Remotely pulls target log snippet (Secure SSH Execution)
-    NodeLog-->>Wrapper: Streams requested log payload lines
+    admin->>client: 2. Requests log snippet (Executes tail)
+    client-->>admin: Streams log lines back to stdin
     
-    Wrapper->>Log1: 3. Logs session context & prompt_hash
-    Wrapper->>Daemon: 4. Forwards text query context (Protected Internal TCP)
-    deactivate Wrapper
+    admin->>Log1: 3. Logs admin context & prompt_hash
+    admin->>gateway: 4. Redirects data to native binary /usr/bin/c (TCP/18080)
+    deactivate admin
     
-    activate Daemon
-    Note over Daemon: 5a. Enforces 'tier0-readonly' check
+    activate gateway
+    Note over gateway: 5a. Enforces 'tier0-readonly' check
     
-    alt Analysis Payload Violates Blacklist Policy
-        Daemon-->>Term: 5c. Rejects execution & outputs Policy Block Alert
-    else Command Passes Security Controls
-        Note over Daemon: 5b. Runs centralized Regex Filters (Scrubs Host/IP/Secrets)
-        Daemon->>Log2: 6. Commits localized telemetry log write
-        Daemon->>Cloud: 7. Forwards clean prompt via Satellite (mTLS 1.3)
-        deactivate Daemon
+    alt Payload Contains Blacklisted Activities
+        gateway-->>Term: 5c. Blocks execution & outputs Policy Warning
+    else Payload Passes Validation
+        Note over gateway: 5b. Runs Regex Filters (Scrubs Host/IP/Keys)
+        gateway->>Log2: 6. Commits localized telemetry log write
+        gateway->>Cloud: 7. Forwards clean telemetry prompt (mTLS 1.3)
+        deactivate gateway
         
         activate Cloud
-        Note over Cloud: Resolves query against verified Linux KBs
         Cloud->>Term: 8. Returns response payload
         deactivate Cloud
     end
