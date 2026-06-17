@@ -1,6 +1,5 @@
-
 ```mermaid
-graph TD
+graph LR
     %% Styling definitions
     classDef user fill:#2ecc71,stroke:#27ae60,stroke-width:2px,color:#fff;
     classDef local fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff;
@@ -12,7 +11,7 @@ graph TD
     %% Workflow Nodes
     Admin[👤 System Administrator]:::user
     
-    subgraph Local Host [Local Hardened Host Environment]
+    subgraph LocalHost ["🏡 Local Hardened Host Environment"]
         Wrapper["🛠️ /usr/local/bin/cx<br>(Hardened Wrapper Script)"]:::local
         Daemon["⚙️ Local Gateway Daemon<br>(127.0.0.1:18080)"]:::daemon
         
@@ -21,23 +20,24 @@ graph TD
         PromptLog[("📝 prompts.log<br>(Sanitized Telemetry)")]:::log
     end
 
-    subgraph Red Hat Infrastructure [Downstream Satellite Delivery]
-        RHCloud["☁️ Red Hat Hybrid Cloud Console<br>API Engine"]:::cloud
+    subgraph RedHat ["☁️ Red Hat Infrastructure"]
+        RHCloud["Red Hat Hybrid Cloud Console<br>API Engine"]:::cloud
     end
 
-    Response["💻 System Terminal Response<br>(Verified Linux Knowledge Base)"]:::terminal
+    Response["💻 System Terminal Response<br>(Verified Linux KB)"]:::terminal
 
     %% Connectivity & Data Flow
-    Admin -->|1. Executes: cx 'how do I find...'| Wrapper
+    Admin -->|1. Executes cx 'how do I find...'| Wrapper
     
-    Wrapper -->|2a. Generates Crypto prompt_hash| UserLog
+    Wrapper -->|2a. Generates prompt_hash| UserLog
     Wrapper -->|2b. Logs user context| UserLog
-    Wrapper -->|3. Redirects query to /usr/bin/c| Daemon
+    Wrapper -->|3. Redirects to /usr/bin/c| Daemon
     
-    Daemon -->|4a. Enforces tier0-readonly check| Daemon
-    Daemon -->|4b. Runs regex filters & scrubs data| Daemon
-    Daemon -->|5. Commits sanitized telemetry| PromptLog
+    %% Self-loops for enforcement and filtering
+    Daemon -->|4a. Enforces tier0-readonly| Daemon
+    Daemon -->|4b. Runs regex filters| Daemon
     
-    Daemon -->|6. Forwards cleaned prompt via Satellite| RHCloud
-    RHCloud -->|7. Resolves query against KB| Response
+    Daemon -->|5. Commits telemetry| PromptLog
+    Daemon -->|6. Forwards clean prompt via Satellite| RHCloud
+    RHCloud -->|7. Resolves query| Response
 ```
