@@ -1,3 +1,4 @@
+```mermaid
 sequenceDiagram
     autonumber
     actor Admin as 👤 System Administrator
@@ -48,3 +49,4 @@ sequenceDiagram
     LLM->>Term: Stream remediation blueprint data stream
     deactivate LLM
     Note over Term: Output: "Update e1000e driver payload<br>or disable ASPM states"
+```
