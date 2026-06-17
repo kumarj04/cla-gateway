@@ -1,24 +1,28 @@
 ```mermaid
 sequenceDiagram
     actor Admin as 👤 Admin
+    
     box rgb(240, 248, 255) Remote Target Production Nodes
         participant NodeLog as 📝 Production Target Logs<br>(Syslog, App, or Audit)
     end
+    
     box rgb(212, 239, 216) Central Unix Jump Server (Runs ClaD Engine)
         participant Wrapper as 🛠️ cx Wrapper Script
         participant Log1 as 📝 user-map.log<br>(Central Audit Trail)
     end
+    
     box rgb(254, 251, 216) Dedicated Unix ClaD Gateway Host
         participant Daemon as ⚙️ Gateway Daemon
         participant Log2 as 📝 prompts.log<br>(Telemetry Log)
     end
+    
     participant Cloud as ☁️ Red Hat Cloud Engine
     participant Term as 💻 Terminal
 
     Admin->>Wrapper: 1. Executes log analysis query
     activate Wrapper
     
-    %% Automated Secure Pull Mechanism
+    %% Remote Pull Steps
     Wrapper->>NodeLog: 2. Remotely pulls target log snippet (Secure SSH Execution)
     NodeLog-->>Wrapper: Streams requested log payload lines
     
@@ -31,7 +35,7 @@ sequenceDiagram
     
     alt Analysis Payload Violates Blacklist Policy
         Daemon-->>Term: 5c. Rejects execution & outputs Policy Block Alert
-    else Payload Passes Security Controls
+    else Command Passes Security Controls
         Note over Daemon: 5b. Runs centralized Regex Filters (Scrubs Host/IP/Secrets)
         Daemon->>Log2: 6. Commits localized telemetry log write
         Daemon->>Cloud: 7. Forwards clean prompt via Satellite (mTLS 1.3)
