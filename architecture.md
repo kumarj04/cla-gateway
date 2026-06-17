@@ -1,4 +1,5 @@
-```sequenceDiagram
+```mermaid
+sequenceDiagram
     autonumber
     actor Admin as 👤 System Administrator
     box rgb(254, 251, 216) Local Hardened Host Environment
