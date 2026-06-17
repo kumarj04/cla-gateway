@@ -16,7 +16,6 @@ graph TD
         Wrapper["🛠️ /usr/local/bin/cx<br>(Hardened Wrapper Script)"]:::local
         Daemon["⚙️ Local Gateway Daemon<br>(127.0.0.1:18080)"]:::daemon
         
-        %% Splitting up self-loops into clean downward internal blocks
         Check1["🔒 4a. Enforces 'tier0-readonly' operational check"]:::subEngine
         Check2["🧹 4b. Runs localized Regex filters"]:::subEngine
         
@@ -38,12 +37,15 @@ graph TD
     Wrapper -->|2b. Logs user context| UserLog
     Wrapper -->|3. Redirects to /usr/bin/c| Daemon
     
-    %% Linear processing inside the daemon block instead of loops
     Daemon --> Check1
     Check1 --> Check2
     
+    %% Fixed layout paths to prevent crossing lines
     Check2 -->|5. Commits sanitized telemetry| PromptLog
     Check2 -->|6. Forwards clean prompt via Satellite| RHCloud
     
     RHCloud -->|7. Resolves query against KB| Response
+
+    %% Layout hints to force promptLog to stay on the right and RedHat on the left
+    RHCloud ~~~ PromptLog
 ```
