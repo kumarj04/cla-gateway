@@ -10,21 +10,26 @@ sequenceDiagram
     participant Cloud as ☁️ Red Hat Hybrid Cloud<br>Console API Engine
     participant Terminal as 💻 System Terminal Response
 
-    Admin->>Wrapper: 1. Executes: cx "how do I find..."
+    Admin->>Wrapper: 1. Executes command (IPC / Execve)
     activate Wrapper
-    Wrapper->>Log1: 2. Generates prompt_hash & Logs context<br>(UID, TTY, user, hash)
-    Wrapper->>Daemon: 3. Redirects query to native binary /usr/bin/c
+    Wrapper->>Log1: 2. Generates prompt_hash & logs context (File I/O)
+    Wrapper->>Daemon: 3. Redirects sanitized prompt (Loopback TCP/18080)
     deactivate Wrapper
     
     activate Daemon
-    Note over Daemon: 4a. Enforces 'tier0-readonly' check<br>(Blocks destructive root tasks)
-    Note over Daemon: 4b. Runs localized Regex filters<br>(Scrubs system names, IPs, keys)
-    Daemon->>Log2: 5. Commits sanitized telemetry & status outputs
-    Daemon->>Cloud: 6. Forwards cleaned technical prompt via Satellite
-    deactivate Daemon
+    Note over Daemon: 4a. Enforces 'tier0-readonly' check<br>(Validates against command blacklist)
     
-    activate Cloud
-    Note over Cloud: Processes query against verified Linux KBs
-    Cloud->>Terminal: 7. Returns structural terminal answer
-    deactivate Cloud
+    alt Command Contains Destructive Root Activity
+        Daemon-->>Terminal: [FAIL] 4c. Rejects execution & returns Policy Block Alert
+    else Command Passes Security Validation
+        Note over Daemon: 4b. Runs localized Regex filters<br>(Scrubs System Names, IPs, and Keys)
+        Daemon->>Log2: 5. Commits sanitized telemetry (Local Disk Write)
+        Daemon->>Cloud: 6. Forwards clean telemetry prompt (HTTPS / TLS 1.3 via Satellite)
+        deactivate Daemon
+        
+        activate Cloud
+        Note over Cloud: Processes query against verified Linux KBs
+        Cloud->>Terminal: 7. Returns structural terminal response (HTTPS / JSON payload)
+        deactivate Cloud
+    end
 ```
