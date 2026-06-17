@@ -13,37 +13,42 @@ graph TD
     Admin[👤 System Administrator]:::user
     
     subgraph LocalHost ["🏡 Local Hardened Host Environment"]
-        %% Primary Central Processing Spine
+        %% Column 1: Logging Databases (Left Side)
+        UserLog[("📝 user-map.log<br>(UID, TTY, Hash)")]:::log
+        PromptLog[("📝 prompts.log<br>(Sanitized Telemetry)")]:::log
+
+        %% Column 2: Central Execution Spine (Center)
         Wrapper["🛠️ /usr/local/bin/cx<br>(Hardened Wrapper Script)"]:::local
         Daemon["⚙️ Local Gateway Daemon<br>(127.0.0.1:18080)"]:::daemon
         Check1["🔒 4a. Enforces 'tier0-readonly' check"]:::subEngine
         Check2["🧹 4b. Runs localized Regex filters"]:::subEngine
-        
-        %% Log files aligned cleanly on the left side
-        UserLog[("📝 user-map.log<br>(UID, TTY, Hash)")]:::log
-        PromptLog[("📝 prompts.log<br>(Sanitized Telemetry)")]:::log
     end
 
-    %% Outbound Infrastructure (Right side delivery)
+    %% Column 3: External Systems (Right Side)
     RHCloud["☁️ Red Hat Hybrid Cloud Console<br>API Engine"]:::cloud
     Response["💻 System Terminal Response<br>(Verified Linux KB)"]:::terminal
 
-    %% Straight Central Execution Flow
+    %% 1. Top Entry
     Admin -->|1. Executes cx 'how do I find...'| Wrapper
+
+    %% 2. First Stage: Wrapper Execution & Context Logging
     Wrapper -->|3. Redirects to /usr/bin/c| Daemon
-    Daemon --> Check1
-    Check1 --> Check2
-    
-    %% Left-Side Logging Streams
     Wrapper -->|2a| UserLog
     Wrapper -->|2b| UserLog
+
+    %% 3. Second Stage: Internal Middleware Chain (Forces a straight downward spine)
+    Daemon --> Check1
+    Check1 --> Check2
+
+    %% 4. Third Stage: Outputs and Exit Routes
     Check2 -->|5. Commits sanitized telemetry| PromptLog
-    
-    %% Right-Side Network Delivery
     Check2 -->|6. Forwards clean prompt via Satellite| RHCloud
+
+    %% 5. Final Destination Resolution
     RHCloud -->|7. Resolves query against KB| Response
 
-    %% Hard Alignment Overrides (Keeps line 3 perfectly straight)
-    UserLog ~~~ Daemon
-    PromptLog ~~~ Check2
+    %% Hard Horizontal Alignment Rules (Locks layout layout order: Left -> Center -> Right)
+    UserLog  -.- Daemon
+    PromptLog -.- Check2
+    Check2   -.- RHCloud
 ```
