@@ -1,60 +1,49 @@
 ```mermaid
-graph TD
-    %% Styling definitions
-    classDef user fill:#2ecc71,stroke:#27ae60,stroke-width:2px,color:#fff;
-    classDef local fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff;
-    classDef daemon fill:#e67e22,stroke:#d35400,stroke-width:2px,color:#fff;
-    classDef subEngine fill:#f39c12,stroke:#d35400,stroke-width:1px,color:#fff;
-    classDef cloud fill:#9b59b6,stroke:#8e44ad,stroke-width:2px,color:#fff;
-    classDef terminal fill:#34495e,stroke:#2c3e50,stroke-width:2px,color:#fff;
-    classDef log fill:#95a5a6,stroke:#7f8c8d,stroke-width:1px,color:#fff,stroke-dasharray: 5 5;
-    classDef alert fill:#e74c3c,stroke:#c0392b,stroke-width:2px,color:#fff;
-
-    %% Workflow Nodes
-    Admin[👤 1. System Administrator Executes Command]:::user
+sequenceDiagram
+    actor Admin as 👤 Admin
     
-    subgraph TargetFleet ["🌐 Remote Target Production Nodes"]
-        NodeLog[("📝 Production Target Logs<br>(Syslog, App, or Audit)")]:::log
-    end
-
-    subgraph JumpServer ["🏡 Central Unix Jump Server (Runs ClaD Engine)"]
-        Wrapper["🛠️ cx Wrapper Script"]:::local
-        UserLog[("📝 2. user-map.log<br>(Central Audit Trail)")]:::log
+    box "Remote Target Production Nodes"
+        participant NodeLog as 📝 Production Target Logs<br>(Syslog, App, or Audit)
     end
     
-    subgraph GatewayHost ["🛡️ Dedicated Unix ClaD Gateway Host"]
-        Daemon["⚙️ 3. Central Gateway Daemon"]:::daemon
-        Check1["🔒 4a. Enforces 'tier0-readonly' check"]:::subEngine
-        Check2["🧹 4b. Passes Check: Runs Localized Regex Filters"]:::subEngine
-        FailBlock["🚨 4c. Destructive Activity Detected:<br>Policy Block Alert Issued"]:::alert
-        PromptLog[("📝 5. prompts.log<br>(Commits Sanitized Telemetry)")]:::log
+    box "Central Unix Jump Server (Runs ClaD Engine)"
+        participant Wrapper as 🛠️ cx Wrapper Script
+        participant Log1 as 📝 user-map.log<br>(Central Audit Trail)
     end
+    
+    box "Dedicated Unix ClaD Gateway Host"
+        participant Daemon as ⚙️ Gateway Daemon
+        participant Log2 as 📝 prompts.log<br>(Telemetry Log)
+    end
+    
+    participant Cloud as ☁️ Red Hat Cloud Engine
+    participant Term as 💻 Terminal
 
-    RHCloud["☁️ 6. Red Hat Hybrid Cloud Console<br>API Engine"]:::cloud
-    Response["💻 7. System Terminal Response<br>(Verified Linux KB Result)"]:::terminal
-
-    %% Top Spine Flow
-    Admin -->|1. Request| Wrapper
+    Admin->>Wrapper: 1. Executes log analysis query
+    activate Wrapper
     
-    %% Automated Remote Pull
-    Wrapper -->|2. Secure SSH Pull| NodeLog
-    NodeLog -->|Return Log Lines| Wrapper
+    %% Remote Pull Steps
+    Wrapper->>NodeLog: 2. Remotely pulls target log snippet (Secure SSH Execution)
+    NodeLog-->>Wrapper: Streams requested log payload lines
     
-    Wrapper --> UserLog
-    Wrapper -->|3. Forward Payload| Daemon
-    Daemon --> Check1
+    Wrapper->>Log1: 3. Logs session context & prompt_hash
+    Wrapper->>Daemon: 4. Forwards text query context (Protected Internal TCP)
+    deactivate Wrapper
     
-    %% Split Branches
-    Check1 -->|Destructive Blocked| FailBlock
-    Check1 -->|Safe to Process| Check2
+    activate Daemon
+    Note over Daemon: 5a. Enforces 'tier0-readonly' check
     
-    %% Left Side Drop For Blocked Execution
-    FailBlock -->|Immediate Drop| Response
-    
-    %% Right Side Outputs
-    Check2 -->|5. Commit Telemetry| PromptLog
-    Check2 -->|6. HTTPS / TLS 1.3 via Satellite| RHCloud
-    
-    %% Final Resolution Path
-    RHCloud -->|HTTPS / JSON Payload| Response
+    alt Analysis Payload Violates Blacklist Policy
+        Daemon-->>Term: 5c. Rejects execution & outputs Policy Block Alert
+    else Command Passes Security Controls
+        Note over Daemon: 5b. Runs centralized Regex Filters (Scrubs Host/IP/Secrets)
+        Daemon->>Log2: 6. Commits localized telemetry log write
+        Daemon->>Cloud: 7. Forwards clean prompt via Satellite (mTLS 1.3)
+        deactivate Daemon
+        
+        activate Cloud
+        Note over Cloud: Resolves query against verified Linux KBs
+        Cloud->>Term: 8. Returns response payload
+        deactivate Cloud
+    end
 ```
