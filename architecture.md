@@ -1,9 +1,10 @@
 ```mermaid
-graph LR
+graph TD
     %% Styling definitions
     classDef user fill:#2ecc71,stroke:#27ae60,stroke-width:2px,color:#fff;
     classDef local fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff;
     classDef daemon fill:#e67e22,stroke:#d35400,stroke-width:2px,color:#fff;
+    classDef subEngine fill:#f39c12,stroke:#d35400,stroke-width:1px,color:#fff;
     classDef cloud fill:#9b59b6,stroke:#8e44ad,stroke-width:2px,color:#fff;
     classDef terminal fill:#34495e,stroke:#2c3e50,stroke-width:2px,color:#fff;
     classDef log fill:#95a5a6,stroke:#7f8c8d,stroke-width:1px,color:#fff,stroke-dasharray: 5 5;
@@ -14,6 +15,10 @@ graph LR
     subgraph LocalHost ["🏡 Local Hardened Host Environment"]
         Wrapper["🛠️ /usr/local/bin/cx<br>(Hardened Wrapper Script)"]:::local
         Daemon["⚙️ Local Gateway Daemon<br>(127.0.0.1:18080)"]:::daemon
+        
+        %% Splitting up self-loops into clean downward internal blocks
+        Check1["🔒 4a. Enforces 'tier0-readonly' operational check"]:::subEngine
+        Check2["🧹 4b. Runs localized Regex filters"]:::subEngine
         
         %% Audit Logs
         UserLog[("📝 user-map.log<br>(UID, TTY, Hash)")]:::log
@@ -33,11 +38,12 @@ graph LR
     Wrapper -->|2b. Logs user context| UserLog
     Wrapper -->|3. Redirects to /usr/bin/c| Daemon
     
-    %% Self-loops for enforcement and filtering
-    Daemon -->|4a. Enforces tier0-readonly| Daemon
-    Daemon -->|4b. Runs regex filters| Daemon
+    %% Linear processing inside the daemon block instead of loops
+    Daemon --> Check1
+    Check1 --> Check2
     
-    Daemon -->|5. Commits telemetry| PromptLog
-    Daemon -->|6. Forwards clean prompt via Satellite| RHCloud
-    RHCloud -->|7. Resolves query| Response
+    Check2 -->|5. Commits sanitized telemetry| PromptLog
+    Check2 -->|6. Forwards clean prompt via Satellite| RHCloud
+    
+    RHCloud -->|7. Resolves query against KB| Response
 ```
