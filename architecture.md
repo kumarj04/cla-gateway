@@ -13,13 +13,13 @@ graph TD
     Admin[👤 System Administrator]:::user
     
     subgraph LocalHost ["🏡 Local Hardened Host Environment"]
+        %% Main Pipeline (Left Axis)
         Wrapper["🛠️ /usr/local/bin/cx<br>(Hardened Wrapper Script)"]:::local
         Daemon["⚙️ Local Gateway Daemon<br>(127.0.0.1:18080)"]:::daemon
-        
-        Check1["🔒 4a. Enforces 'tier0-readonly' operational check"]:::subEngine
+        Check1["🔒 4a. Enforces 'tier0-readonly' check"]:::subEngine
         Check2["🧹 4b. Runs localized Regex filters"]:::subEngine
         
-        %% Audit Logs
+        %% Side Logs (Right Axis)
         UserLog[("📝 user-map.log<br>(UID, TTY, Hash)")]:::log
         PromptLog[("📝 prompts.log<br>(Sanitized Telemetry)")]:::log
     end
@@ -30,22 +30,24 @@ graph TD
 
     Response["💻 System Terminal Response<br>(Verified Linux KB)"]:::terminal
 
-    %% Connectivity & Data Flow
+    %% Main Central Flow Execution
     Admin -->|1. Executes cx 'how do I find...'| Wrapper
-    
-    Wrapper -->|2a. Generates prompt_hash| UserLog
-    Wrapper -->|2b. Logs user context| UserLog
     Wrapper -->|3. Redirects to /usr/bin/c| Daemon
-    
     Daemon --> Check1
     Check1 --> Check2
     
-    %% Fixed layout paths to prevent crossing lines
+    %% Right Side Database Writes
+    Wrapper -->|2a. Generates prompt_hash| UserLog
+    Wrapper -->|2b. Logs user context| UserLog
     Check2 -->|5. Commits sanitized telemetry| PromptLog
-    Check2 -->|6. Forwards clean prompt via Satellite| RHCloud
     
+    %% Bottom Outbound Exit
+    Check2 -->|6. Forwards clean prompt via Satellite| RHCloud
     RHCloud -->|7. Resolves query against KB| Response
 
-    %% Layout hints to force promptLog to stay on the right and RedHat on the left
-    RHCloud ~~~ PromptLog
+    %% Structural alignment overrides to lock the databases over to the right side
+    Wrapper  ~~~ UserLog
+    Daemon   ~~~ UserLog
+    Check1   ~~~ PromptLog
+    Check2   ~~~ PromptLog
 ```
