@@ -33,7 +33,7 @@ graph TD
 
     Response["💻 7. System Terminal Response<br>(Verified Linux KB Result)"]:::terminal
 
-    %% Top Stream
+    %% Top Spine Flow
     Admin -->|IPC / Execve| Wrapper
     Wrapper --> UserLog
     Wrapper --> Daemon
@@ -43,14 +43,15 @@ graph TD
     Check1 -->|Destructive Blocked| FailBlock
     Check1 -->|Safe to Process| Check2
     
-    %% Left Side Drop For Blocked Execution
+    %% Left Side Failure Stream 
     FailBlock -->|Immediate Drop| Response
     
-    %% Right Side Stream For Sanitized Queries (No crossing lines)
-    Check2 --> PromptLog
+    %% Clean Symmetrical Outbound Paths (Completely eliminates intersection)
+    Check2 -->|5. Local Log Write| PromptLog
     Check2 -->|6. HTTPS / TLS 1.3 via Satellite| RHCloud
+    
     RHCloud -->|HTTPS / JSON Payload| Response
 
-    %% Alignment Constraints to Keep Lines Straight
-    Check2 -.- RHCloud
+    %% Hard alignment layout constraint (Keeps boxes spaced cleanly)
+    PromptLog ~~~ RHCloud
 ```
